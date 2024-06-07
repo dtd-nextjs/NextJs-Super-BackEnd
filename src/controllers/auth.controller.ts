@@ -91,7 +91,7 @@ export const refreshTokenController = async (refreshToken: string) => {
   await prisma.refreshToken.create({
     data: {
       accountId: account.id,
-      token: refreshToken,
+      token: newRefreshToken,
       expiresAt: refreshTokenDoc.expiresAt
     }
   })
