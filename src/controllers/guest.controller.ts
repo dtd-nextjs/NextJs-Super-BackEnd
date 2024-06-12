@@ -3,7 +3,7 @@ import { DishStatus, OrderStatus, Role } from '@/constants/type'
 import prisma from '@/database'
 import { GuestCreateOrdersBodyType, GuestLoginBodyType } from '@/schemaValidations/guest.schema'
 import { StatusError } from '@/utils/errors'
-import { signAccessToken, signRefreshToken } from '@/utils/jwt'
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt'
 import { addMilliseconds } from 'date-fns'
 import ms from 'ms'
 
@@ -37,7 +37,9 @@ export const guestLoginController = async (body: GuestLoginBodyType) => {
     role: Role.Guest,
     exp: ms(envConfig.GUEST_ACCESS_TOKEN_EXPIRES_IN)
   })
-  const refreshTokenExpiresAt = addMilliseconds(new Date(), ms(envConfig.GUEST_REFRESH_TOKEN_EXPIRES_IN))
+  const decodedRefreshToken = verifyRefreshToken(refreshToken)
+  const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+
   guest = await prisma.guest.update({
     where: {
       id: guest.id
