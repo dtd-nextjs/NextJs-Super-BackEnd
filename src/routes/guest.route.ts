@@ -64,6 +64,4 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       })
     }
   )
-
-  fastify.get
 }
