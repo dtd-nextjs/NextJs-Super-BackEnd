@@ -10,12 +10,11 @@ export const signAccessToken = (
   },
   options?: SignerOptions
 ) => {
-  const { exp, ...restPayload } = payload
+  const { exp } = payload
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {
         key: envConfig.ACCESS_TOKEN_SECRET,
         algorithm: 'HS256',
-        expiresIn: exp,
         ...options
       }
     : {
@@ -25,7 +24,7 @@ export const signAccessToken = (
         ...options
       }
   const signSync = createSigner(optionSigner)
-  return signSync({ ...restPayload, tokenType: TokenType.AccessToken })
+  return signSync({ ...payload, tokenType: TokenType.AccessToken })
 }
 
 export const signRefreshToken = (
@@ -34,12 +33,11 @@ export const signRefreshToken = (
   },
   options?: SignerOptions
 ) => {
-  const { exp, ...restPayload } = payload
+  const { exp } = payload
   const optionSigner: Partial<SignerOptions & { key: string | Buffer | PrivateKey }> = exp
     ? {
         key: envConfig.REFRESH_TOKEN_SECRET,
         algorithm: 'HS256',
-        expiresIn: exp,
         ...options
       }
     : {
@@ -49,7 +47,7 @@ export const signRefreshToken = (
         ...options
       }
   const signSync = createSigner(optionSigner)
-  return signSync({ ...restPayload, tokenType: TokenType.RefreshToken })
+  return signSync({ ...payload, tokenType: TokenType.RefreshToken })
 }
 
 export const verifyAccessToken = (token: string) => {

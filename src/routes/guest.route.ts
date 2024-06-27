@@ -1,6 +1,20 @@
 import { Role } from '@/constants/type'
-import { guestCreateOrdersController, guestLoginController } from '@/controllers/guest.controller'
+import {
+  guestCreateOrdersController,
+  guestLoginController,
+  guestLogoutController,
+  guestRefreshTokenController
+} from '@/controllers/guest.controller'
 import { requireGuestHook, requireLoginedHook } from '@/hooks/auth.hooks'
+import {
+  LogoutBody,
+  LogoutBodyType,
+  RefreshTokenBody,
+  RefreshTokenBodyType,
+  RefreshTokenRes,
+  RefreshTokenResType
+} from '@/schemaValidations/auth.schema'
+import { MessageRes, MessageResType } from '@/schemaValidations/common.schema'
 import {
   GuestCreateOrdersBody,
   GuestCreateOrdersBodyType,
@@ -41,6 +55,47 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       })
     }
   )
+  fastify.post<{ Reply: MessageResType; Body: LogoutBodyType }>(
+    '/auth/logout',
+    {
+      schema: {
+        response: {
+          200: MessageRes
+        },
+        body: LogoutBody
+      },
+      preValidation: fastify.auth([requireLoginedHook])
+    },
+    async (request, reply) => {
+      const message = await guestLogoutController(request.decodedAccessToken?.userId as number)
+      reply.send({
+        message
+      })
+    }
+  )
+
+  fastify.post<{
+    Reply: RefreshTokenResType
+    Body: RefreshTokenBodyType
+  }>(
+    '/auth/refresh-token',
+    {
+      schema: {
+        response: {
+          200: RefreshTokenRes
+        },
+        body: RefreshTokenBody
+      }
+    },
+    async (request, reply) => {
+      const result = await guestRefreshTokenController(request.body.refreshToken)
+      reply.send({
+        message: 'Lấy token mới thành công',
+        data: result
+      })
+    }
+  )
+
   fastify.post<{
     Reply: GuestCreateOrdersResType
     Body: GuestCreateOrdersBodyType
