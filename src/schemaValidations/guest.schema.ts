@@ -4,7 +4,7 @@ import z from 'zod'
 
 export const GuestLoginBody = z
   .object({
-    name: z.string(),
+    name: z.string().min(2).max(50),
     tableNumber: z.number(),
     token: z.string()
   })
