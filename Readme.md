@@ -119,6 +119,8 @@ API xác thực người dùng thông qua session token, session token này là 
 
 ## Setup nhanh postman
 
+> Hiện tại thì chưa có file collection Postman, khi nào mình quay xong khóa học mình sẽ update lên nhé
+
 Mình có lưu 1 file là `NextJs Free API.postman_collection.json` trong thư mục `server`, các bạn chỉ cần import file này vào Postman là có ngay collection của mình. Tiếp theo các bạn tạo 1 environment mới, và set biến `host` là `http://localhost:4000`, và chọn environment này khi gọi API là xong.
 
 ## Tài khoản mặc định
