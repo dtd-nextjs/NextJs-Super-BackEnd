@@ -23,7 +23,8 @@ export const guestLoginController = async (body: GuestLoginBodyType) => {
 
   let guest = await prisma.guest.create({
     data: {
-      name: body.name
+      name: body.name,
+      tableNumber: body.tableNumber
     }
   })
   const refreshToken = signRefreshToken(
@@ -122,7 +123,7 @@ export const guestCreateOrdersController = async (guestId: number, body: GuestCr
       }
     })
     const orders = await Promise.all(
-      body.orders.map(async (order) => {
+      body.map(async (order) => {
         const dish = await tx.dish.findUniqueOrThrow({
           where: {
             id: order.dishId
@@ -165,4 +166,18 @@ export const guestCreateOrdersController = async (guestId: number, body: GuestCr
     return orders
   })
   return result
+}
+
+export const guestGetOrdersController = async (guestId: number) => {
+  const orders = await prisma.order.findMany({
+    where: {
+      guestId
+    },
+    include: {
+      dishSnapshot: true,
+      orderHandler: true,
+      guest: true
+    }
+  })
+  return orders
 }
