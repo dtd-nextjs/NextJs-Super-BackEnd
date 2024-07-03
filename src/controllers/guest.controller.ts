@@ -129,6 +129,12 @@ export const guestCreateOrdersController = async (guestId: number, body: GuestCr
             id: order.dishId
           }
         })
+        if (dish.status === DishStatus.Unavailable) {
+          throw new Error(`Món ${dish.name} đã hết`)
+        }
+        if (dish.status === DishStatus.Hidden) {
+          throw new Error(`Món ${dish.name} không thể đặt`)
+        }
         const dishSnapshot = await tx.dishSnapshot.create({
           data: {
             description: dish.description,
