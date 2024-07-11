@@ -51,7 +51,9 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
             id: result.guest.id,
             name: result.guest.name,
             role: Role.Guest,
-            tableNumber: result.guest.tableNumber
+            tableNumber: result.guest.tableNumber,
+            createdAt: result.guest.createdAt,
+            updatedAt: result.guest.updatedAt
           },
           accessToken: result.accessToken,
           refreshToken: result.refreshToken
