@@ -95,7 +95,7 @@ export const errorHandlerPlugin = fastifyPlugin(async (fastify) => {
     } else if (isPrismaClientKnownRequestError(error) && error.code === 'P2025') {
       const statusCode = 404
       return reply.status(statusCode).send({
-        message: 'Không tìm thấy dữ liệu!',
+        message: error.message ?? 'Không tìm thấy dữ liệu',
         statusCode: statusCode
       })
     } else {
