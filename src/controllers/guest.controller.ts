@@ -1,5 +1,5 @@
 import envConfig from '@/config'
-import { DishStatus, OrderStatus, Role } from '@/constants/type'
+import { DishStatus, OrderStatus, Role, TableStatus } from '@/constants/type'
 import prisma from '@/database'
 import { GuestCreateOrdersBodyType, GuestLoginBodyType } from '@/schemaValidations/guest.schema'
 import { TokenPayload } from '@/types/jwt.types'
@@ -17,6 +17,20 @@ export const guestLoginController = async (body: GuestLoginBodyType) => {
   if (!table) {
     throw new StatusError({
       message: 'Bàn không tồn tại hoặc mã token không đúng',
+      status: 401
+    })
+  }
+
+  if (table.status === TableStatus.Hidden) {
+    throw new StatusError({
+      message: 'Bàn đã bị ẩn',
+      status: 401
+    })
+  }
+
+  if (table.status === TableStatus.Reserved) {
+    throw new StatusError({
+      message: 'Bàn đã được đặt trước, hãy liên hệ nhân viên để được hỗ trợ',
       status: 401
     })
   }
@@ -122,6 +136,20 @@ export const guestCreateOrdersController = async (guestId: number, body: GuestCr
         id: guestId
       }
     })
+    if (guest.tableNumber === null) {
+      throw new Error('Bàn của bạn đã bị xóa, vui lòng đăng xuất và đăng nhập lại một bàn mới')
+    }
+    const table = await tx.table.findUniqueOrThrow({
+      where: {
+        number: guest.tableNumber
+      }
+    })
+    if (table.status === TableStatus.Hidden) {
+      throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng đăng xuất và chọn bàn khác`)
+    }
+    if (table.status === TableStatus.Reserved) {
+      throw new Error(`Bàn ${table.number} đã được đặt trước, vui lòng đăng xuất và chọn bàn khác`)
+    }
     const orders = await Promise.all(
       body.map(async (order) => {
         const dish = await tx.dish.findUniqueOrThrow({

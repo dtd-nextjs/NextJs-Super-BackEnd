@@ -1,9 +1,12 @@
+import { Role } from '@/constants/type'
 import {
   changePasswordController,
   createEmployeeAccount,
+  createGuestController,
   deleteEmployeeAccount,
   getAccountList,
   getEmployeeAccount,
+  getGuestList,
   getMeController,
   updateEmployeeAccount,
   updateMeController
@@ -20,6 +23,14 @@ import {
   ChangePasswordBodyType,
   CreateEmployeeAccountBody,
   CreateEmployeeAccountBodyType,
+  CreateGuestBody,
+  CreateGuestBodyType,
+  CreateGuestRes,
+  CreateGuestResType,
+  GetGuestListQueryParams,
+  GetGuestListQueryParamsType,
+  GetListGuestsRes,
+  GetListGuestsResType,
   UpdateEmployeeAccountBody,
   UpdateEmployeeAccountBodyType,
   UpdateMeBody,
@@ -193,6 +204,48 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       reply.send({
         data: result,
         message: 'Đổi mật khẩu thành công'
+      })
+    }
+  )
+
+  fastify.post<{ Reply: CreateGuestResType; Body: CreateGuestBodyType }>(
+    '/guests',
+    {
+      schema: {
+        response: {
+          200: CreateGuestRes
+        },
+        body: CreateGuestBody
+      },
+      preValidation: fastify.auth([requireOwnerHook])
+    },
+    async (request, reply) => {
+      const result = await createGuestController(request.body)
+      reply.send({
+        message: 'Tạo tài khoản khách thành công',
+        data: { ...result, role: Role.Guest } as CreateGuestResType['data']
+      })
+    }
+  )
+  fastify.get<{ Reply: GetListGuestsResType; Querystring: GetGuestListQueryParamsType }>(
+    '/guests',
+    {
+      schema: {
+        response: {
+          200: GetListGuestsRes
+        },
+        querystring: GetGuestListQueryParams
+      },
+      preValidation: fastify.auth([requireOwnerHook])
+    },
+    async (request, reply) => {
+      const result = await getGuestList({
+        fromDate: request.query.fromDate,
+        toDate: request.query.toDate
+      })
+      reply.send({
+        message: 'Lấy danh sách khách thành công',
+        data: result as GetListGuestsResType['data']
       })
     }
   )

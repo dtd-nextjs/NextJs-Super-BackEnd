@@ -45,15 +45,30 @@ export const createTable = async (data: CreateTableBodyType) => {
 export const updateTable = (number: number, data: UpdateTableBodyType) => {
   if (data.changeToken) {
     const token = randomId()
-    return prisma.table.update({
-      where: {
-        number
-      },
-      data: {
-        status: data.status,
-        capacity: data.capacity,
-        token
-      }
+    // Xóa hết các refresh token của guest theo table
+    return prisma.$transaction(async (tx) => {
+      const [table] = await Promise.all([
+        tx.table.update({
+          where: {
+            number
+          },
+          data: {
+            status: data.status,
+            capacity: data.capacity,
+            token
+          }
+        }),
+        tx.guest.updateMany({
+          where: {
+            tableNumber: number
+          },
+          data: {
+            refreshToken: null,
+            refreshTokenExpiresAt: null
+          }
+        })
+      ])
+      return table
     })
   }
   return prisma.table.update({

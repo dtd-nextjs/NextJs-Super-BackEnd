@@ -1,6 +1,88 @@
-import { OrderStatus } from '@/constants/type'
+import { DishStatus, OrderStatus, TableStatus } from '@/constants/type'
 import prisma from '@/database'
-import { UpdateOrderBodyType } from '@/schemaValidations/order.schema'
+import { CreateOrdersBodyType, UpdateOrderBodyType } from '@/schemaValidations/order.schema'
+
+export const createOrdersController = async (orderHandlerId: number, body: CreateOrdersBodyType) => {
+  const { guestId, orders } = body
+  const guest = await prisma.guest.findUniqueOrThrow({
+    where: {
+      id: guestId
+    }
+  })
+  if (guest.tableNumber === null) {
+    throw new Error('Bàn của bạn đã bị xóa, vui lòng đăng xuất và đăng nhập lại một bàn mới')
+  }
+  const table = await prisma.table.findUniqueOrThrow({
+    where: {
+      number: guest.tableNumber
+    }
+  })
+  if (table.status === TableStatus.Hidden) {
+    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`)
+  }
+
+  const [ordersRecord, socketRecord] = await Promise.all([
+    prisma.$transaction(async (tx) => {
+      const ordersRecord = await Promise.all(
+        orders.map(async (order) => {
+          const dish = await tx.dish.findUniqueOrThrow({
+            where: {
+              id: order.dishId
+            }
+          })
+          if (dish.status === DishStatus.Unavailable) {
+            throw new Error(`Món ${dish.name} đã hết`)
+          }
+          if (dish.status === DishStatus.Hidden) {
+            throw new Error(`Món ${dish.name} không thể đặt`)
+          }
+          const dishSnapshot = await tx.dishSnapshot.create({
+            data: {
+              description: dish.description,
+              image: dish.image,
+              name: dish.name,
+              price: dish.price,
+              dishId: dish.id,
+              status: dish.status
+            }
+          })
+          const orderRecord = await tx.order.create({
+            data: {
+              dishSnapshotId: dishSnapshot.id,
+              guestId,
+              quantity: order.quantity,
+              tableNumber: guest.tableNumber,
+              orderHandlerId,
+              status: OrderStatus.Pending
+            },
+            include: {
+              dishSnapshot: true,
+              guest: true,
+              orderHandler: true
+            }
+          })
+          type OrderRecord = typeof orderRecord
+          return orderRecord as OrderRecord & {
+            status: (typeof OrderStatus)[keyof typeof OrderStatus]
+            dishSnapshot: OrderRecord['dishSnapshot'] & {
+              status: (typeof DishStatus)[keyof typeof DishStatus]
+            }
+          }
+        })
+      )
+      return ordersRecord
+    }),
+    prisma.socket.findUnique({
+      where: {
+        guestId: body.guestId
+      }
+    })
+  ])
+  return {
+    orders: ordersRecord,
+    socketId: socketRecord?.socketId
+  }
+}
 
 export const getOrdersController = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
   const orders = await prisma.order.findMany({

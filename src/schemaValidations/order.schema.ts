@@ -90,3 +90,24 @@ export type PayGuestOrdersBodyType = z.TypeOf<typeof PayGuestOrdersBody>
 export const PayGuestOrdersRes = GetOrdersRes
 
 export type PayGuestOrdersResType = z.TypeOf<typeof PayGuestOrdersRes>
+
+export const CreateOrdersBody = z
+  .object({
+    guestId: z.number(),
+    orders: z.array(
+      z.object({
+        dishId: z.number(),
+        quantity: z.number()
+      })
+    )
+  })
+  .strict()
+
+export type CreateOrdersBodyType = z.TypeOf<typeof CreateOrdersBody>
+
+export const CreateOrdersRes = z.object({
+  message: z.string(),
+  data: z.array(OrderSchema)
+})
+
+export type CreateOrdersResType = z.TypeOf<typeof CreateOrdersRes>

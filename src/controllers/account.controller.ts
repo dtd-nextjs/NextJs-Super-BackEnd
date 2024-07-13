@@ -1,10 +1,11 @@
 import envConfig from '@/config'
 import { PrismaErrorCode } from '@/constants/error-reference'
-import { Role } from '@/constants/type'
+import { Role, TableStatus } from '@/constants/type'
 import prisma from '@/database'
 import {
   ChangePasswordBodyType,
   CreateEmployeeAccountBodyType,
+  CreateGuestBodyType,
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
 } from '@/schemaValidations/account.schema'
@@ -177,4 +178,38 @@ export const changePasswordController = async (accountId: number, body: ChangePa
     }
   })
   return newAccount
+}
+
+export const getGuestList = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {
+  const orders = await prisma.guest.findMany({
+    orderBy: {
+      createdAt: 'desc'
+    },
+    where: {
+      createdAt: {
+        gte: fromDate,
+        lte: toDate
+      }
+    }
+  })
+  return orders
+}
+
+export const createGuestController = async (body: CreateGuestBodyType) => {
+  const table = await prisma.table.findUnique({
+    where: {
+      number: body.tableNumber
+    }
+  })
+  if (!table) {
+    throw new Error('Bàn không tồn tại')
+  }
+
+  if (table.status === TableStatus.Hidden) {
+    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`)
+  }
+  const guest = await prisma.guest.create({
+    data: body
+  })
+  return guest
 }
