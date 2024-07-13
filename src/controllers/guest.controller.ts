@@ -15,24 +15,15 @@ export const guestLoginController = async (body: GuestLoginBodyType) => {
     }
   })
   if (!table) {
-    throw new StatusError({
-      message: 'Bàn không tồn tại hoặc mã token không đúng',
-      status: 401
-    })
+    throw new Error('Bàn không tồn tại hoặc mã token không đúng')
   }
 
   if (table.status === TableStatus.Hidden) {
-    throw new StatusError({
-      message: 'Bàn đã bị ẩn',
-      status: 401
-    })
+    throw new Error('Bàn này đã bị ẩn, hãy chọn bàn khác để đăng nhập')
   }
 
   if (table.status === TableStatus.Reserved) {
-    throw new StatusError({
-      message: 'Bàn đã được đặt trước, hãy liên hệ nhân viên để được hỗ trợ',
-      status: 401
-    })
+    throw new Error('Bàn đã được đặt trước, hãy liên hệ nhân viên để được hỗ trợ')
   }
 
   let guest = await prisma.guest.create({

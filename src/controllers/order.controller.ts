@@ -10,7 +10,7 @@ export const createOrdersController = async (orderHandlerId: number, body: Creat
     }
   })
   if (guest.tableNumber === null) {
-    throw new Error('Bàn của bạn đã bị xóa, vui lòng đăng xuất và đăng nhập lại một bàn mới')
+    throw new Error('Bàn gắn liền với khách hàng này đã bị xóa, vui lòng chọn khách hàng khác!')
   }
   const table = await prisma.table.findUniqueOrThrow({
     where: {
@@ -18,7 +18,7 @@ export const createOrdersController = async (orderHandlerId: number, body: Creat
     }
   })
   if (table.status === TableStatus.Hidden) {
-    throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng chọn bàn khác`)
+    throw new Error(`Bàn ${table.number} gắn liền với khách hàng đã bị ẩn, vui lòng chọn khách hàng khác!`)
   }
 
   const [ordersRecord, socketRecord] = await Promise.all([
