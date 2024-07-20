@@ -21,6 +21,7 @@ import tablesRoutes from '@/routes/table.route'
 import guestRoutes from '@/routes/guest.route'
 import orderRoutes from '@/routes/order.route'
 import { socketPlugin } from '@/plugins/socket.plugins'
+import indicatorRoutes from '@/routes/indicator.route'
 
 const fastify = Fastify({
   logger: false
@@ -79,6 +80,9 @@ const start = async () => {
     })
     fastify.register(guestRoutes, {
       prefix: '/guest'
+    })
+    fastify.register(indicatorRoutes, {
+      prefix: '/indicators'
     })
     await initOwnerAccount()
     await fastify.listen({
