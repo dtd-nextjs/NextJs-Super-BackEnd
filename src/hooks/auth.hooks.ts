@@ -20,6 +20,12 @@ export const requireOwnerHook = async (request: FastifyRequest) => {
   }
 }
 
+export const requireEmployeeHook = async (request: FastifyRequest) => {
+  if (request.decodedAccessToken?.role !== Role.Employee) {
+    throw new AuthError('Bạn không có quyền truy cập')
+  }
+}
+
 export const requireGuestHook = async (request: FastifyRequest) => {
   if (request.decodedAccessToken?.role !== Role.Guest) {
     throw new AuthError('Bạn không có quyền truy cập')

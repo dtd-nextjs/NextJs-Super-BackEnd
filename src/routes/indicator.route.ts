@@ -1,5 +1,5 @@
 import { dashboardIndicatorController } from '@/controllers/indicator.controller'
-import { requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   DashboardIndicatorQueryParams,
   DashboardIndicatorQueryParamsType,
@@ -9,7 +9,12 @@ import {
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 
 export default async function indicatorRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
-  fastify.addHook('preValidation', fastify.auth([requireLoginedHook, requireOwnerHook]))
+  fastify.addHook(
+    'preValidation',
+    fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+      relation: 'and'
+    })
+  )
   fastify.get<{ Reply: DashboardIndicatorResType; Querystring: DashboardIndicatorQueryParamsType }>(
     '/dashboard',
     {

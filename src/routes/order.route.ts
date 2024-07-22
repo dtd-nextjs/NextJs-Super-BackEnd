@@ -6,7 +6,7 @@ import {
   payOrdersController,
   updateOrderController
 } from '@/controllers/order.controller'
-import { requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   CreateOrdersBody,
   CreateOrdersBodyType,
@@ -32,7 +32,12 @@ import {
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 
 export default async function orderRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
-  fastify.addHook('preValidation', fastify.auth([requireLoginedHook]))
+  fastify.addHook(
+    'preValidation',
+    fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+      relation: 'and'
+    })
+  )
   fastify.post<{ Reply: CreateOrdersResType; Body: CreateOrdersBodyType }>(
     '/',
     {
@@ -41,8 +46,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
           200: CreateOrdersRes
         },
         body: CreateOrdersBody
-      },
-      preValidation: fastify.auth([requireOwnerHook])
+      }
     },
     async (request, reply) => {
       const { socketId, orders } = await createOrdersController(
@@ -68,8 +72,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
           200: GetOrdersRes
         },
         querystring: GetOrdersQueryParams
-      },
-      preValidation: fastify.auth([requireOwnerHook])
+      }
     },
     async (request, reply) => {
       const result = await getOrdersController({
@@ -91,8 +94,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
           200: GetOrderDetailRes
         },
         params: OrderParam
-      },
-      preValidation: fastify.auth([requireOwnerHook])
+      }
     },
     async (request, reply) => {
       const result = await getOrderDetailController(request.params.orderId)
@@ -112,8 +114,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
         },
         body: UpdateOrderBody,
         params: OrderParam
-      },
-      preValidation: fastify.auth([requireOwnerHook])
+      }
     },
     async (request, reply) => {
       const result = await updateOrderController(request.params.orderId, {
@@ -140,8 +141,7 @@ export default async function orderRoutes(fastify: FastifyInstance, options: Fas
           200: PayGuestOrdersRes
         },
         body: PayGuestOrdersBody
-      },
-      preValidation: fastify.auth([requireOwnerHook])
+      }
     },
     async (request, reply) => {
       const result = await payOrdersController({

@@ -1,5 +1,5 @@
 import { createDish, deleteDish, getDishDetail, getDishList, updateDish } from '@/controllers/dish.controller'
-import { requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   CreateDishBody,
   CreateDishBodyType,
@@ -69,7 +69,9 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
           200: DishRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const dish = await createDish(request.body)
@@ -94,7 +96,9 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
           200: DishRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const dish = await updateDish(request.params.id, request.body)
@@ -117,7 +121,9 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
           200: DishRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const result = await deleteDish(request.params.id)

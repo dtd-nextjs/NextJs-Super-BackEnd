@@ -11,7 +11,7 @@ import {
   updateEmployeeAccount,
   updateMeController
 } from '@/controllers/account.controller'
-import { requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   AccountIdParam,
   AccountIdParamType,
@@ -54,7 +54,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       const ownerAccountId = request.decodedAccessToken?.userId as number
       const accounts = await getAccountList(ownerAccountId)
       reply.send({
-        data: accounts,
+        data: accounts as AccountListResType['data'],
         message: 'Lấy danh sách nhân viên thành công'
       })
     }
@@ -76,7 +76,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const account = await createEmployeeAccount(request.body)
       reply.send({
-        data: account,
+        data: account as AccountResType['data'],
         message: 'Tạo tài khoản thành công'
       })
     }
@@ -96,7 +96,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       const accountId = request.params.id
       const account = await getEmployeeAccount(accountId)
       reply.send({
-        data: account,
+        data: account as AccountResType['data'],
         message: 'Lấy thông tin nhân viên thành công'
       })
     }
@@ -117,9 +117,12 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const accountId = request.params.id
       const body = request.body
-      const account = await updateEmployeeAccount(accountId, body)
+      const { account, socketId } = await updateEmployeeAccount(accountId, body)
+      if (socketId) {
+        fastify.io.to(socketId).emit('refresh-token', account)
+      }
       reply.send({
-        data: account,
+        data: account as AccountResType['data'],
         message: 'Cập nhật thành công'
       })
     }
@@ -138,9 +141,12 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     },
     async (request, reply) => {
       const accountId = request.params.id
-      const account = await deleteEmployeeAccount(accountId)
+      const { account, socketId } = await deleteEmployeeAccount(accountId)
+      if (socketId) {
+        fastify.io.to(socketId).emit('logout', account)
+      }
       reply.send({
-        data: account,
+        data: account as AccountResType['data'],
         message: 'Xóa thành công'
       })
     }
@@ -158,7 +164,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const account = await getMeController(request.decodedAccessToken?.userId as number)
       reply.send({
-        data: account,
+        data: account as AccountResType['data'],
         message: 'Lấy thông tin thành công'
       })
     }
@@ -180,7 +186,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const result = await updateMeController(request.decodedAccessToken?.userId as number, request.body)
       reply.send({
-        data: result,
+        data: result as AccountResType['data'],
         message: 'Cập nhật thông tin thành công'
       })
     }
@@ -202,7 +208,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const result = await changePasswordController(request.decodedAccessToken?.userId as number, request.body)
       reply.send({
-        data: result,
+        data: result as AccountResType['data'],
         message: 'Đổi mật khẩu thành công'
       })
     }
@@ -217,7 +223,9 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         },
         body: CreateGuestBody
       },
-      preValidation: fastify.auth([requireOwnerHook])
+      preValidation: fastify.auth([requireOwnerHook, requireEmployeeHook], {
+        relation: 'or'
+      })
     },
     async (request, reply) => {
       const result = await createGuestController(request.body)
@@ -236,7 +244,9 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         },
         querystring: GetGuestListQueryParams
       },
-      preValidation: fastify.auth([requireOwnerHook])
+      preValidation: fastify.auth([requireOwnerHook, requireEmployeeHook], {
+        relation: 'or'
+      })
     },
     async (request, reply) => {
       const result = await getGuestList({

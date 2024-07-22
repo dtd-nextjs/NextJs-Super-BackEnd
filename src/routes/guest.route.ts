@@ -122,7 +122,7 @@ export default async function guestRoutes(fastify: FastifyInstance, options: Fas
       fastify.io.to(ManagerRoom).emit('new-order', result)
       reply.send({
         message: 'Đặt món thành công',
-        data: result
+        data: result as GuestCreateOrdersResType['data']
       })
     }
   )

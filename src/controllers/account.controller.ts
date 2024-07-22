@@ -94,9 +94,14 @@ export const getAccountList = async (accountId: number) => {
 
 export const updateEmployeeAccount = async (accountId: number, body: UpdateEmployeeAccountBodyType) => {
   try {
+    const socketRecord$ = prisma.socket.findUnique({
+      where: {
+        accountId
+      }
+    })
     if (body.changePassword) {
       const hashedPassword = await hashPassword(body.password!)
-      const account = await prisma.account.update({
+      const account$ = prisma.account.update({
         where: {
           id: accountId
         },
@@ -104,22 +109,32 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           name: body.name,
           email: body.email,
           avatar: body.avatar,
-          password: hashedPassword
+          password: hashedPassword,
+          role: body.role
         }
       })
-      return account
+      const [account, socketRecord] = await Promise.all([account$, socketRecord$])
+      return {
+        account,
+        socketId: socketRecord?.socketId
+      }
     } else {
-      const account = await prisma.account.update({
+      const account$ = prisma.account.update({
         where: {
           id: accountId
         },
         data: {
           name: body.name,
           email: body.email,
-          avatar: body.avatar
+          avatar: body.avatar,
+          role: body.role
         }
       })
-      return account
+      const [account, socketRecord] = await Promise.all([account$, socketRecord$])
+      return {
+        account,
+        socketId: socketRecord?.socketId
+      }
     }
   } catch (error: any) {
     if (isPrismaClientKnownRequestError(error)) {
@@ -132,11 +147,20 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
 }
 
 export const deleteEmployeeAccount = async (accountId: number) => {
-  return prisma.account.delete({
+  const socketRecord = await prisma.socket.findUnique({
+    where: {
+      accountId
+    }
+  })
+  const account = await prisma.account.delete({
     where: {
       id: accountId
     }
   })
+  return {
+    account,
+    socketId: socketRecord?.socketId
+  }
 }
 
 export const getMeController = async (accountId: number) => {
