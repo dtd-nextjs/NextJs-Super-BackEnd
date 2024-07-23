@@ -69,6 +69,7 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
           200: DishRes
         }
       },
+      // Login AND (Owner OR Employee)
       preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
         relation: 'and'
       })
