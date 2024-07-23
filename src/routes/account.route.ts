@@ -116,8 +116,8 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
     async (request, reply) => {
       const accountId = request.params.id
       const body = request.body
-      const { account, socketId } = await updateEmployeeAccount(accountId, body)
-      if (socketId) {
+      const { account, socketId, isChangeRole } = await updateEmployeeAccount(accountId, body)
+      if (isChangeRole && socketId) {
         fastify.io.to(socketId).emit('refresh-token', account)
       }
       reply.send({

@@ -89,14 +89,25 @@ export const getAccountList = async () => {
 
 export const updateEmployeeAccount = async (accountId: number, body: UpdateEmployeeAccountBodyType) => {
   try {
-    const socketRecord$ = prisma.socket.findUnique({
-      where: {
-        accountId
-      }
-    })
+    const [socketRecord, oldAccount] = await Promise.all([
+      prisma.socket.findUnique({
+        where: {
+          accountId
+        }
+      }),
+      prisma.account.findUnique({
+        where: {
+          id: accountId
+        }
+      })
+    ])
+    if (!oldAccount) {
+      throw new EntityError([{ field: 'email', message: 'Tài khoản bạn đang cập nhật không còn tồn tại nữa!' }])
+    }
+    const isChangeRole = oldAccount.role !== body.role
     if (body.changePassword) {
       const hashedPassword = await hashPassword(body.password!)
-      const account$ = prisma.account.update({
+      const account = await prisma.account.update({
         where: {
           id: accountId
         },
@@ -108,13 +119,13 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           role: body.role
         }
       })
-      const [account, socketRecord] = await Promise.all([account$, socketRecord$])
       return {
         account,
-        socketId: socketRecord?.socketId
+        socketId: socketRecord?.socketId,
+        isChangeRole
       }
     } else {
-      const account$ = prisma.account.update({
+      const account = await prisma.account.update({
         where: {
           id: accountId
         },
@@ -125,10 +136,10 @@ export const updateEmployeeAccount = async (accountId: number, body: UpdateEmplo
           role: body.role
         }
       })
-      const [account, socketRecord] = await Promise.all([account$, socketRecord$])
       return {
         account,
-        socketId: socketRecord?.socketId
+        socketId: socketRecord?.socketId,
+        isChangeRole
       }
     }
   } catch (error: any) {
