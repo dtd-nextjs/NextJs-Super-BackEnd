@@ -51,8 +51,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       preValidation: fastify.auth([requireOwnerHook])
     },
     async (request, reply) => {
-      const ownerAccountId = request.decodedAccessToken?.userId as number
-      const accounts = await getAccountList(ownerAccountId)
+      const accounts = await getAccountList()
       reply.send({
         data: accounts as AccountListResType['data'],
         message: 'Lấy danh sách nhân viên thành công'
