@@ -1,5 +1,5 @@
 import { createTable, deleteTable, getTableDetail, getTableList, updateTable } from '@/controllers/table.controller'
-import { requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   CreateTableBody,
   CreateTableBodyType,
@@ -69,7 +69,9 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
           200: TableRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const Table = await createTable(request.body)
@@ -94,7 +96,9 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
           200: TableRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const Table = await updateTable(request.params.number, request.body)
@@ -117,7 +121,9 @@ export default async function tablesRoutes(fastify: FastifyInstance, options: Fa
           200: TableRes
         }
       },
-      preValidation: fastify.auth([requireLoginedHook, requireOwnerHook])
+      preValidation: fastify.auth([requireLoginedHook, [requireOwnerHook, requireEmployeeHook]], {
+        relation: 'and'
+      })
     },
     async (request, reply) => {
       const result = await deleteTable(request.params.number)
