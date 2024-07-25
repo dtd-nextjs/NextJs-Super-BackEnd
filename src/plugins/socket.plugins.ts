@@ -9,6 +9,7 @@ export const socketPlugin = fastifyPlugin(async (fastify) => {
   const chalk = await getChalk()
   fastify.io.use(async (socket, next) => {
     const { Authorization } = socket.handshake.auth
+
     if (!Authorization) {
       return next(new AuthError('Authorization không hợp lệ'))
     }
@@ -52,5 +53,8 @@ export const socketPlugin = fastifyPlugin(async (fastify) => {
   })
   fastify.io.on('connection', async (socket) => {
     console.log(chalk.cyanBright('🔌 Socket connected:', socket.id))
+    socket.on('disconnect', async (reason) => {
+      console.log(chalk.redBright('🔌 Socket disconnected:', socket.id))
+    })
   })
 })
