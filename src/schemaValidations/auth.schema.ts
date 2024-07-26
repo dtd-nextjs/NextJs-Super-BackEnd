@@ -51,3 +51,9 @@ export const LogoutBody = z
   .strict()
 
 export type LogoutBodyType = z.TypeOf<typeof LogoutBody>
+
+export const LoginGoogleQuery = z.object({
+  code: z.string()
+})
+
+export type LoginGoogleQueryType = z.TypeOf<typeof LoginGoogleQuery>
