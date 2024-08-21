@@ -11,7 +11,7 @@ import {
   updateEmployeeAccount,
   updateMeController
 } from '@/controllers/account.controller'
-import { requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
+import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   AccountIdParam,
   AccountIdParamType,
@@ -70,7 +70,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         },
         body: CreateEmployeeAccountBody
       },
-      preValidation: fastify.auth([requireOwnerHook])
+      preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
     async (request, reply) => {
       const account = await createEmployeeAccount(request.body)
@@ -111,7 +111,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         params: AccountIdParam,
         body: UpdateEmployeeAccountBody
       },
-      preValidation: fastify.auth([requireOwnerHook])
+      preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
     async (request, reply) => {
       const accountId = request.params.id
@@ -136,7 +136,7 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
         },
         params: AccountIdParam
       },
-      preValidation: fastify.auth([requireOwnerHook])
+      preValidation: fastify.auth([requireOwnerHook, pauseApiHook])
     },
     async (request, reply) => {
       const accountId = request.params.id
@@ -180,7 +180,8 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
           200: AccountRes
         },
         body: UpdateMeBody
-      }
+      },
+      preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
       const result = await updateMeController(request.decodedAccessToken?.userId as number, request.body)
@@ -202,7 +203,8 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
           200: AccountRes
         },
         body: ChangePasswordBody
-      }
+      },
+      preValidation: fastify.auth([pauseApiHook])
     },
     async (request, reply) => {
       const result = await changePasswordController(request.decodedAccessToken?.userId as number, request.body)

@@ -1,7 +1,11 @@
 import { Role } from '@/constants/type'
-import { AuthError } from '@/utils/errors'
+import { AuthError, ForbiddenError } from '@/utils/errors'
 import { verifyAccessToken } from '@/utils/jwt'
 import { FastifyRequest } from 'fastify'
+
+export const pauseApiHook = async (request: FastifyRequest) => {
+  throw new ForbiddenError('Chức năng bị tạm ngưng')
+}
 
 export const requireLoginedHook = async (request: FastifyRequest) => {
   const accessToken = request.headers.authorization?.split(' ')[1]
