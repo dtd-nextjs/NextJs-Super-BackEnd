@@ -1,6 +1,7 @@
+import envConfig from '@/config'
 import { OrderStatus } from '@/constants/type'
 import prisma from '@/database'
-import { format } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 
 export const dashboardIndicatorController = async ({ fromDate, toDate }: { fromDate: Date; toDate: Date }) => {
   const [orders, guests, dishes] = await Promise.all([
@@ -65,7 +66,7 @@ export const dashboardIndicatorController = async ({ fromDate, toDate }: { fromD
 
   // Lặp từ fromDate -> toDate
   for (let i = fromDate; i <= toDate; i.setDate(i.getDate() + 1)) {
-    revenueByDateObj[format(i, 'dd/MM/yyyy')] = 0
+    revenueByDateObj[formatInTimeZone(i, envConfig.SERVER_TIMEZONE, 'dd/MM/yyyy')] = 0
   }
 
   // Số lượng bàn đang được sử dụng
@@ -76,8 +77,8 @@ export const dashboardIndicatorController = async ({ fromDate, toDate }: { fromD
       if (order.dishSnapshot.dishId && dishIndicatorObj[order.dishSnapshot.dishId]) {
         dishIndicatorObj[order.dishSnapshot.dishId].successOrders++
       }
-      const date = format(order.createdAt, 'dd/MM/yyyy')
-      revenueByDateObj[date] += order.dishSnapshot.price * order.quantity
+      const date = formatInTimeZone(order.createdAt, envConfig.SERVER_TIMEZONE, 'dd/MM/yyyy')
+      revenueByDateObj[date] = (revenueByDateObj[date] ?? 0) + order.dishSnapshot.price * order.quantity
     }
     if (
       [OrderStatus.Processing, OrderStatus.Pending, OrderStatus.Delivered].includes(order.status as any) &&
