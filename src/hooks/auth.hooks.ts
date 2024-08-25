@@ -4,7 +4,7 @@ import { verifyAccessToken } from '@/utils/jwt'
 import { FastifyRequest } from 'fastify'
 
 export const pauseApiHook = async (request: FastifyRequest) => {
-  throw new ForbiddenError('Chức năng bị tạm ngưng')
+  // throw new ForbiddenError('Chức năng bị tạm ngưng')
 }
 
 export const requireLoginedHook = async (request: FastifyRequest) => {
