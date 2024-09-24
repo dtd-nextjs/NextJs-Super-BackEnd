@@ -9,9 +9,11 @@ import {
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
 } from '@/schemaValidations/account.schema'
+import { RoleType } from '@/types/jwt.types'
 import { comparePassword, hashPassword } from '@/utils/crypto'
 import { EntityError, isPrismaClientKnownRequestError } from '@/utils/errors'
 import { getChalk } from '@/utils/helpers'
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt'
 
 export const initOwnerAccount = async () => {
   const accountCount = await prisma.account.count()
@@ -208,6 +210,37 @@ export const changePasswordController = async (accountId: number, body: ChangePa
     }
   })
   return newAccount
+}
+
+export const changePasswordV2Controller = async (accountId: number, body: ChangePasswordBodyType) => {
+  const account = await changePasswordController(accountId, body)
+  await prisma.refreshToken.deleteMany({
+    where: {
+      accountId
+    }
+  })
+  const accessToken = signAccessToken({
+    userId: account.id,
+    role: account.role as RoleType
+  })
+  const refreshToken = signRefreshToken({
+    userId: account.id,
+    role: account.role as RoleType
+  })
+  const decodedRefreshToken = verifyRefreshToken(refreshToken)
+  const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+  await prisma.refreshToken.create({
+    data: {
+      accountId: account.id,
+      token: refreshToken,
+      expiresAt: refreshTokenExpiresAt
+    }
+  })
+  return {
+    account,
+    accessToken,
+    refreshToken
+  }
 }
 
 export const getGuestList = async ({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) => {

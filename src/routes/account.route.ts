@@ -1,6 +1,7 @@
 import { Role } from '@/constants/type'
 import {
   changePasswordController,
+  changePasswordV2Controller,
   createEmployeeAccount,
   createGuestController,
   deleteEmployeeAccount,
@@ -21,6 +22,10 @@ import {
   AccountResType,
   ChangePasswordBody,
   ChangePasswordBodyType,
+  ChangePasswordV2Body,
+  ChangePasswordV2BodyType,
+  ChangePasswordV2Res,
+  ChangePasswordV2ResType,
   CreateEmployeeAccountBody,
   CreateEmployeeAccountBodyType,
   CreateGuestBody,
@@ -210,6 +215,29 @@ export default async function accountRoutes(fastify: FastifyInstance, options: F
       const result = await changePasswordController(request.decodedAccessToken?.userId as number, request.body)
       reply.send({
         data: result as AccountResType['data'],
+        message: 'Đổi mật khẩu thành công'
+      })
+    }
+  )
+
+  fastify.put<{
+    Reply: ChangePasswordV2ResType
+    Body: ChangePasswordV2BodyType
+  }>(
+    '/change-password-v2',
+    {
+      schema: {
+        response: {
+          200: ChangePasswordV2Res
+        },
+        body: ChangePasswordV2Body
+      },
+      preValidation: fastify.auth([pauseApiHook])
+    },
+    async (request, reply) => {
+      const result = await changePasswordV2Controller(request.decodedAccessToken?.userId as number, request.body)
+      reply.send({
+        data: result as ChangePasswordV2ResType['data'],
         message: 'Đổi mật khẩu thành công'
       })
     }
