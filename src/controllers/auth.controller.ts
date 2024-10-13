@@ -183,7 +183,15 @@ export const loginGoogleController = async (code: string) => {
     userId: account.id,
     role: account.role as RoleType
   })
-
+  const decodedRefreshToken = verifyRefreshToken(refreshToken)
+  const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+  await prisma.refreshToken.create({
+    data: {
+      accountId: account.id,
+      token: refreshToken,
+      expiresAt: refreshTokenExpiresAt
+    }
+  })
   return {
     accessToken,
     refreshToken,
