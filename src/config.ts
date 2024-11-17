@@ -36,6 +36,7 @@ const configSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   GOOGLE_AUTHORIZED_REDIRECT_URI: z.string(),
   PRODUCTION: z.enum(['true', 'false']).transform((val) => val === 'true'),
+  DOCKER: z.enum(['true', 'false']).transform((val) => val === 'true'),
   PRODUCTION_URL: z.string(),
   SERVER_TIMEZONE: z.string()
 })
