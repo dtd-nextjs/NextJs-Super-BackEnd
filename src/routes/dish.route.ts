@@ -1,10 +1,21 @@
-import { createDish, deleteDish, getDishDetail, getDishList, updateDish } from '@/controllers/dish.controller'
+import {
+  createDish,
+  deleteDish,
+  getDishDetail,
+  getDishList,
+  getDishListWithPagination,
+  updateDish
+} from '@/controllers/dish.controller'
 import { pauseApiHook, requireEmployeeHook, requireLoginedHook, requireOwnerHook } from '@/hooks/auth.hooks'
 import {
   CreateDishBody,
   CreateDishBodyType,
   DishListRes,
   DishListResType,
+  DishListWithPaginationQuery,
+  DishListWithPaginationQueryType,
+  DishListWithPaginationRes,
+  DishListWithPaginationResType,
   DishParams,
   DishParamsType,
   DishRes,
@@ -30,6 +41,34 @@ export default async function dishRoutes(fastify: FastifyInstance, options: Fast
       const dishs = await getDishList()
       reply.send({
         data: dishs as DishListResType['data'],
+        message: 'Lấy danh sách món ăn thành công!'
+      })
+    }
+  )
+
+  fastify.get<{
+    Reply: DishListWithPaginationResType
+    Querystring: DishListWithPaginationQueryType
+  }>(
+    '/pagination',
+    {
+      schema: {
+        response: {
+          200: DishListWithPaginationRes
+        },
+        querystring: DishListWithPaginationQuery
+      }
+    },
+    async (request, reply) => {
+      const { page, limit } = request.query
+      const dishs = await getDishListWithPagination(page, limit)
+      reply.send({
+        data: {
+          items: dishs as DishListWithPaginationResType['data']['items'],
+          total: dishs.length,
+          page,
+          limit
+        },
         message: 'Lấy danh sách món ăn thành công!'
       })
     }

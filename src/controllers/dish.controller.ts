@@ -9,6 +9,16 @@ export const getDishList = () => {
   })
 }
 
+export const getDishListWithPagination = (page: number, limit: number) => {
+  return prisma.dish.findMany({
+    orderBy: {
+      createdAt: 'desc'
+    },
+    skip: (page - 1) * limit,
+    take: limit
+  })
+}
+
 export const getDishDetail = (id: number) => {
   return prisma.dish.findUniqueOrThrow({
     where: {
