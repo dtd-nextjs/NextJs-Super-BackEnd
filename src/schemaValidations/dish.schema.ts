@@ -52,7 +52,8 @@ export type DishListWithPaginationQueryType = z.TypeOf<typeof DishListWithPagina
 
 export const DishListWithPaginationRes = z.object({
   data: z.object({
-    total: z.number(),
+    totalItem: z.number(),
+    totalPage: z.number(),
     page: z.number(),
     limit: z.number(),
     items: z.array(DishSchema)
